@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Client Insights metric guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F8FA;--surface:#FFFFFF;--ink:#15192A;--ink-2:#5A6072;--line:#DDE1E8;
+  --accent:#2052C4;--accent-soft:#FFF3D6;--warn:#B8361F;--warn-bar:#E5533D;--warn-soft:#FDECE8;
+  --sky:#D4A03A;--sketch:#EEF1F6;--sketch-tile:#FFFFFF;--hi:#E0A526;--pink:#E5533D;--purple:#1B3A7A;
+  --band:linear-gradient(100deg,#1B3A7A 0%,#2A56A8 55%,#3F74C9 100%);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1220;--surface:#161B2E;--ink:#EEF0F6;--ink-2:#A9B0C3;--line:#283050;
+    --accent:#8FB0F0;--accent-soft:#3A3018;--warn:#FF8A73;--warn-bar:#E5533D;--warn-soft:#3A1E1A;
+    --sky:#E0A526;--sketch:#181E34;--sketch-tile:#1F2640;--hi:#E0A526;--pink:#E5533D;--purple:#8FB0F0;
+    --band:linear-gradient(100deg,#14295A 0%,#1E3F80 55%,#2B58A8 100%);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1220;--surface:#161B2E;--ink:#EEF0F6;--ink-2:#A9B0C3;--line:#283050;
+    --accent:#8FB0F0;--accent-soft:#3A3018;--warn:#FF8A73;--warn-bar:#E5533D;--warn-soft:#3A1E1A;
+    --sky:#E0A526;--sketch:#181E34;--sketch-tile:#1F2640;--hi:#E0A526;--pink:#E5533D;--purple:#8FB0F0;
+    --band:linear-gradient(100deg,#14295A 0%,#1E3F80 55%,#2B58A8 100%);color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 120px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans","Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* Header */
+header.top{padding:36px 0 22px;background:var(--band);color:#FFFFFF;border-bottom:5px solid var(--hi)}
+header.top p.lede{color:rgba(255,255,255,.88)!important}
+header.top .scope{color:rgba(255,255,255,.85)!important}
+header.top .scope b{color:#FFFFFF!important}
+header.top .scope li{background:rgba(0,0,0,.18);padding:4px 11px;border-radius:999px}
+header.top h1{font-size:clamp(28px,4vw,40px);line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0 0 10px;max-width:22ch}
+header.top p.lede{margin:0 0 20px;color:var(--ink-2);max-width:62ch;font-size:16px}
+.scope{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0;padding:0;list-style:none;font-size:13px;color:var(--ink-2)}
+.scope b{color:var(--ink);font-weight:600}
+.demo{display:inline-block;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px;margin-bottom:14px}
+
+/* Sticky nav */
+nav.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.bar .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.views{display:flex;gap:4px;background:var(--sketch);padding:4px;border-radius:10px}
+.views button{border:0;background:transparent;padding:7px 14px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-2)}
+.views button[aria-pressed="true"]{background:var(--accent);color:var(--surface);box-shadow:none}
+.search{margin-left:auto;position:relative;flex:1 1 220px;max-width:320px}
+.search input{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+.pages{display:flex;gap:18px;width:100%;overflow-x:auto}
+.pages button{border:0;background:none;padding:6px 0 8px;cursor:pointer;font-size:15px;font-weight:600;color:var(--ink-2);border-bottom:3px solid transparent;white-space:nowrap}
+.pages button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--hi)}
+
+main{padding:28px 0 80px}
+[hidden]{display:none!important}
+
+/* Watch-outs */
+.watch{border:1px solid var(--line);border-left:6px solid var(--hi);border-radius:10px;background:var(--surface);padding:12px 16px;margin-bottom:24px}
+.watch summary{cursor:pointer;font-weight:700;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.watch summary::-webkit-details-marker{display:none}
+.watch summary span.hint{font-weight:400;font-size:13px;color:var(--ink-2)}
+.watch ul{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 24px}
+.watch li{font-size:13px;color:var(--ink-2)}
+.watch li b{display:block;color:var(--ink);font-size:13px}
+.watch li a{color:var(--accent);text-decoration:none;font-size:13px}
+.watch li a:hover{text-decoration:underline}
+
+/* Page layout */
+.pagehead{margin-bottom:20px}
+.pagehead h2{font-size:28px;margin:0 0 4px;letter-spacing:-.01em}
+.pagehead p{margin:0;color:var(--ink-2)}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:40px;align-items:start}
+.sketch-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 116px)}
+.sketch-col p.cap{font-size:13px;color:var(--ink-2);margin:10px 2px 0}
+
+/* Sketch: the dashboard in miniature */
+.sketch{background:var(--sketch);border-radius:12px;padding:12px;border:1px solid var(--line)}
+.sk-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:14px}
+.sk-split{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:10px}
+.sk-main,.sk-trends,.sk-kpis>*{min-width:0}
+.sk-trends{display:flex;flex-direction:column;gap:5px;border-left:2px solid var(--hi);padding-left:8px}
+.sk-trends .sk-c{min-height:40px}
+.sk-trends .sk-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.sk-cap{font-size:11px;color:var(--ink-2)}
+.sk-rail,.sk-main{display:flex;flex-direction:column;gap:5px}
+.sk-row{display:flex;gap:5px}
+.sk-row>.sk-t,.sk-row>.sk-tiles{flex:1 1 0;min-width:0}
+.sk-t{all:unset;box-sizing:border-box;min-width:0;max-width:100%;cursor:pointer;display:flex;align-items:center;gap:6px;background:var(--sketch-tile);border:1px solid var(--line);border-radius:6px;padding:5px 6px;font-size:11px;line-height:1.2;color:var(--ink)}
+.sk-t .lbl{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.sk-c{min-height:58px;align-items:flex-start;flex-direction:column;justify-content:space-between}
+.sk-c svg{display:block;width:100%;height:18px;overflow:visible}
+.sk-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;align-content:start}
+.sk-tiles .sk-t{padding:4px 3px;flex-direction:column;gap:2px;font-size:10px;justify-content:center;text-align:center}
+.sk-tiles .sk-t .lbl{max-width:100%}
+.sk-fiscal{margin-top:10px;border:1px dashed var(--ink-2);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:5px}
+.sk-fiscal .sk-cap{font-size:11px;color:var(--ink-2)}
+.sk-t:hover,.sk-t.on{border-color:var(--accent);background:var(--accent-soft)}
+
+.pin{flex:none;display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--accent);color:var(--surface);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .pin{color:#0E1220}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pin{color:#0E1220}}
+
+/* Doc strip */
+.docbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;margin:0 0 24px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.docbar .kick{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.docbar h1{margin:2px 0 0;font-size:22px;line-height:1.2;letter-spacing:-.01em}
+.aud{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0;padding:0;list-style:none;font-size:12px}
+.aud li{padding:3px 10px;border-radius:999px;background:var(--sketch);color:var(--ink);font-weight:600}
+.aud li.for{background:none;padding:0;color:var(--ink-2);font-weight:500}
+.scope2{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 22px;margin:4px 0 0;padding:10px 0 0;border-top:1px solid var(--line);list-style:none;font-size:12.5px;color:var(--ink-2)}
+.scope2 b{color:var(--ink);font-weight:600;margin-right:4px}
+
+/* Legend tag */
+.legend-tag{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.legend-tag .dot{width:8px;height:8px;border-radius:50%;background:var(--hi);box-shadow:0 0 0 3px var(--accent-soft)}
+.legend-tag .h{font-weight:500;color:var(--ink-2);text-transform:none;letter-spacing:0}
+
+/* Dashboard chrome in the miniature */
+.sk-app{display:flex;align-items:center;gap:8px;margin:-12px -12px 8px;padding:7px 10px;background:var(--surface);border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;font-size:11px}
+.sk-dots{display:flex;gap:4px;flex:none}.sk-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.sk-title{font-weight:700;color:var(--ink);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sk-title span{font-weight:500;color:var(--ink-2)}
+.sk-pill{margin-left:auto;flex:none;padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);white-space:nowrap}
+.sk-filters{display:flex;gap:4px;margin-bottom:10px}
+.sk-filters span{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--sketch-tile);border:1px solid var(--line);color:var(--ink-2)}
+.sk-t .top{display:flex;align-items:center;gap:5px;min-width:0;max-width:100%}
+.sk-k{flex-direction:column;align-items:flex-start;gap:3px;transition:transform .15s,box-shadow .15s}
+.sk-k .val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);padding-left:2px}
+.sk-t:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(21,25,42,.08)}
+
+/* Game layer */
+@keyframes pinpulse{0%{box-shadow:0 0 0 0 rgba(224,165,38,.75)}70%{box-shadow:0 0 0 8px rgba(224,165,38,0)}100%{box-shadow:0 0 0 0 rgba(224,165,38,0)}}
+.sk-t.pulse .pin{animation:pinpulse 1.6s ease-out infinite}
+.sk-t.seen .pin{background:var(--hi);color:var(--ink)}
+.explore{margin-top:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-2)}
+.explore .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.explore .bar i{display:block;height:100%;background:var(--hi);transition:width .3s}
+.explore b{color:var(--ink);font-variant-numeric:tabular-nums}
+.explore.done b{color:#1E8F5A}
+@media (prefers-reduced-motion:reduce){.sk-t.pulse .pin{animation:none}.sk-t,.explore .bar i{transition:none}}
+
+/* Definitions */
+section.grp{margin-bottom:36px}
+section.grp>h3{font-size:18px;margin:0 0 2px;padding-left:10px;border-left:4px solid var(--hi)}
+section.grp>p.sub{margin:0 0 12px;font-size:14px;color:var(--ink-2)}
+.cols,.row{display:grid;grid-template-columns:32px minmax(150px,1fr) minmax(0,1.3fr) minmax(0,1.3fr);gap:4px 18px}
+.cols{position:sticky;top:var(--navh,112px);z-index:3;background:var(--bg);font-size:12px;font-weight:600;color:var(--ink-2);padding:8px 0 6px;border-bottom:1px solid var(--line);box-shadow:0 6px 8px -8px rgba(21,25,42,.18)}
+.cols .f{justify-self:start;padding:1px 8px;border-radius:5px;background:var(--sketch);color:var(--ink)}
+.row{padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline;scroll-margin-top:140px;border-radius:6px;transition:background .6s}
+.row.on,.row.flash{background:var(--accent-soft)}
+.row h4{margin:0;font-size:15px;font-weight:700}
+.row .as{display:block;font-size:12px;color:var(--ink-2)}
+.row p{margin:0}
+.row .what{font-size:15px}
+.row .calc{font-size:14px;color:var(--ink-2);background:var(--sketch);padding:6px 10px;border-radius:6px;margin:-6px 0 0}
+.row .ex,.row .warn{grid-column:2/-1;font-size:13px}
+.row .ex{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.row .warn{background:var(--warn-soft);border-left:4px solid var(--warn-bar);padding:6px 10px;border-radius:0 6px 6px 0;color:var(--ink)}
+.row .warn b{color:var(--warn)}
+
+/* Driver tree */
+.tree{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 14px}
+.tree h4{margin:0 0 10px;font-size:15px}
+.eq{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px;font-size:14px}
+.eq .term{border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:var(--bg)}
+.eq .term b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+.eq .term.head{border-color:var(--accent)}
+.eq .op{color:var(--ink-2);font-size:16px}
+.tree p{margin:8px 0 0;font-size:13px;color:var(--ink-2);max-width:72ch}
+.up{color:#1E8F5A}.down{color:var(--warn)}
+
+/* Questions view */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px 40px}
+.q h3{font-size:18px;margin:0 0 8px;line-height:1.3}
+.q ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.q li{border-bottom:1px solid var(--line)}
+.q button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;padding:9px 4px}
+.q button:hover{background:var(--accent-soft)}
+.q button:focus-visible{outline:2px solid var(--accent)}
+.q .n{font-weight:600;font-size:14px}
+.q .chip{font-size:12px;color:var(--ink-2);align-self:center}
+.q .w{grid-column:1/-1;font-size:13px;color:var(--ink-2)}
+.q .flag{color:var(--warn);font-weight:700}
+.intro{color:var(--ink-2);max-width:62ch;margin:0 0 24px}
+
+/* Cheat sheet */
+.cheat{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.cheat h3{font-size:17px;margin:0 0 6px;padding-bottom:6px;border-bottom:2px solid var(--hi);color:var(--accent)}
+.cheat dl{margin:0}
+.cheat dt{font-weight:700;font-size:14px;margin-top:10px}
+.cheat dd{margin:0;font-size:13px;color:var(--ink-2)}
+.cheat dd .flag{color:var(--warn);font-weight:700}
+.note{margin-top:28px;font-size:13px;color:var(--ink-2);max-width:80ch}
+
+/* Search results */
+.results h2{font-size:20px;margin:0 0 12px}
+.results .row .as .chip{color:var(--accent)}
+
+footer{font-size:12px;color:var(--ink-2);padding:24px 0 40px;border-top:1px solid var(--line)}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .sketch-col{position:static;max-width:440px}
+  .cheat{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .cols{display:none}
+  .row{grid-template-columns:28px 1fr}
+  .row .what,.row .calc,.row .ex,.row .warn{grid-column:2/-1}
+  .cheat{grid-template-columns:1fr}
+  .search{max-width:none}
+  .qgrid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.row{transition:none}}
+@media print{
+  nav.bar,.search{display:none}
+  .sketch-col{position:static}
+  .row,.tree,section.grp{break-inside:avoid}
+  .watch{break-inside:avoid}
+  body{font-size:12px}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <h1>What every number in the Client Insights Dashboard means</h1>
+  <p class="lede">Plain-English definitions for each tile and chart in Corvane Asset Management’s client dashboard, checked against the warehouse SQL behind it.</p>
+  <ul class="scope">
+    <li><b>Company</b> Corvane Asset Management (fictional)</li>
+    <li><b>Dashboard</b> Client Insights</li>
+    
+    <li><b>Client definition</b> a household with an open account above $0</li>
+  </ul>
+</div></header>
+
+<nav class="bar" aria-label="Guide views"><div class="wrap">
+  <div class="views" role="group" aria-label="View">
+    <button data-view="pages" aria-pressed="true">By dashboard page</button>
+    <button data-view="questions" aria-pressed="false">By question</button>
+    <button data-view="cheatsheet" aria-pressed="false">Cheat sheet</button>
+  </div>
+  <label class="search"><input id="q" type="search" placeholder="Find a metric, e.g. net flows" aria-label="Find a metric"></label>
+  <div class="pages" id="pagetabs" role="group" aria-label="Dashboard page"></div>
+</div></nav>
+
+<main><div class="wrap">
+  <div class="docbar">
+    <div><div class="kick">Dashboard documentation</div><h1>Client Insights metric guide</h1></div>
+    <ul class="aud"><li class="for">Built for</li><li>Client Services</li><li>Strategy</li><li>Data Warehouse</li><li>Decision Science</li><li>Analytics</li></ul>
+  </div>
+  <div id="v-pages"></div>
+  <div id="v-questions" hidden></div>
+  <div id="v-cheatsheet" hidden></div>
+  <div id="v-results" class="results" hidden></div>
+</div></main>
+
+<footer><div class="wrap">Corvane Asset Management is a fictional company. All names, metrics and figures on this page are made up for demonstration.<br>© 2026 Cameron Partee. All rights reserved. · Contact: <a href="mailto:cameronepartee@gmail.com" style="color:var(--accent)">cameronepartee@gmail.com</a></div></footer>
+
+<script>
+const PAGES = [
+  {k:"assets",t:"Assets",q:"How much the firm manages, and what it earns on it.",src:"Balances from daily positions, fees from the billing ledger."},
+  {k:"flows",t:"Flows",q:"How much money clients add and take out.",src:"From the transactions ledger."},
+  {k:"acquisition",t:"Acquisition",q:"How many clients open accounts, and whether they fund them.",src:"Accounts from the account master, funding from the transactions ledger."},
+  {k:"engagement",t:"Engagement",q:"Whether clients stay active, and whether they stay.",src:"Digital activity from app and web logs, meetings from the CRM."}
+];
+const SECS = {
+  kpi:["KPI tiles","The numbers across the top. They follow the date range."],
+  chart:["Charts that follow the date range","Split by whichever attribute you pick, e.g. channel or segment."],
+  fiscal:["Year-over-year trends","A fixed fiscal-year view, so the date range doesn’t apply."],
+  ytd:["Growth drivers","Fiscal year to date vs the same months last year."]
+};
+const ACTIVE_NOTE = "Uses today’s client status (e.g., Oct 21, 2026), so a March 2026 view leaves out clients who left after March.";
+const M = [
+// ASSETS
+{id:"as1",p:"assets",s:"kpi",l:"Total AUM",n:"Total AUM",w:"Everything clients hold with the firm.",c:"Market value of all client accounts at the close of the end date (e.g., Mar 31, 2026).",x:"Includes assets that don’t earn a fee, like cash sweep balances. For revenue questions, use Fee-Earning AUM."},
+{id:"as2",p:"assets",s:"kpi",l:"Beginning AUM",n:"Beginning AUM",w:"Assets on the morning the date range starts.",c:"Market value of all client accounts at the close of the day before the start date (e.g., Feb 28, 2026 for a range starting Mar 1, 2026)."},
+{id:"as3",p:"assets",s:"kpi",l:"Net Flows",n:"Net Flows (Assets page)",w:"Money clients added minus money they took out.",c:"Inflows − outflows from the start date through the end date, including reinvested dividends and interest.",x:"Includes reinvested income, so it runs higher than Net Flows on the Flows page ($348.9M here vs $312.4M there)."},
+{id:"as4",p:"assets",s:"kpi",l:"Market Mov…",n:"Market Movement",w:"Change in value from markets, not clients.",c:"Total AUM − Beginning AUM − Net Flows.",e:"$48.62B − $47.17B − $0.35B = $1.10B"},
+{id:"as5",p:"assets",s:"kpi",l:"Fee-Earnin…",n:"Fee-Earning AUM",w:"Assets the firm actually gets paid on.",c:"Total AUM at the close of the end date, minus cash sweep, advisory-only and fee-waived accounts."},
+{id:"as6",p:"assets",s:"kpi",l:"Avg Fee…",nth:"the first of two",n:"Effective Fee Rate",w:"What the firm earns per dollar managed.",c:"Fee revenue for the date range, scaled to a full year, ÷ the average of daily fee-earning AUM across the range.",e:"$217.7M ÷ $41.87B = 0.52% (52 bps)"},
+{id:"as7",p:"assets",s:"kpi",l:"Avg Fee…",nth:"the second of two",n:"Avg Fee per Client",w:"Fee revenue per client.",c:"Fee revenue for the date range, scaled to a full year, ÷ Active Clients on the end date.",e:"$217.7M ÷ 184,260 = $1,181",x:"In dollars, not basis points. Don’t compare it to Effective Fee Rate."},
+{id:"as8",p:"assets",s:"kpi",l:"AUM per Cl…",n:"AUM per Client",w:"Average balance per client.",c:"Total AUM ÷ Active Clients, both as of the end date.",e:"$48.62B ÷ 184,260 = $263,866"},
+{id:"as9",p:"assets",s:"chart",l:"AUM",n:"AUM (daily)",w:"Assets per day.",c:"Daily AUM by attribute."},
+{id:"as10",p:"assets",s:"chart",l:"AUM Mix",n:"AUM Mix",w:"Where the assets sit.",c:"AUM by asset class, as a % of total."},
+{id:"as11",p:"assets",s:"chart",l:"Fee Rate by Pro…",n:"Fee Rate by Product",w:"Pricing by product.",c:"Annualized fees ÷ fee-earning AUM, per product."},
+{id:"as12",p:"assets",s:"chart",l:"Non-Fee AUM",n:"Non-Fee AUM",w:"Assets that earn nothing.",c:"Total AUM − Fee-Earning AUM.",x:"Clients move into cash when markets fall, so this can grow while revenue shrinks."},
+{id:"as13",p:"assets",s:"fiscal",l:"Monthly AUM",n:"Monthly AUM",w:"Month-end assets, year over year.",c:"AUM at the close of each fiscal month’s last day (e.g., Apr 30, 2025 for April, the first month of FY2026), one line per fiscal year.",x:"The current month uses the latest available day, not a month end (e.g., Oct 20, 2026 when viewed Oct 21)."},
+{id:"as14",p:"assets",s:"fiscal",l:"YTD Revenue",n:"YTD Revenue",w:"Fee revenue to date vs prior years.",c:"Running total of fee revenue from Apr 1 through each fiscal month end, one line per fiscal year."},
+{id:"as15",p:"assets",s:"fiscal",l:"Avg Balance by…",n:"Average Balance by Product Count",w:"Balance per client, single vs multi-product.",c:"AUM ÷ clients, split by whether the client held 2+ products on the first day of that fiscal month (e.g., Apr 1, 2025)."},
+// FLOWS
+{id:"f1",p:"flows",s:"kpi",l:"Gross Inflows",n:"Gross Inflows",w:"Money clients added.",c:"Contributions, transfers in and rollovers from the start date through the end date."},
+{id:"f2",p:"flows",s:"kpi",l:"Gross Outflo…",n:"Gross Outflows",w:"Money clients took out.",c:"Withdrawals, transfers out and distributions from the start date through the end date.",x:"Includes required minimum distributions, which spike every December."},
+{id:"f3",p:"flows",s:"kpi",l:"Net Flows",n:"Net Flows (Flows page)",w:"Money in minus money out.",c:"Gross Inflows − Gross Outflows.",e:"$1,486.2M − $1,173.8M = $312.4M",x:"Excludes reinvested income. The Net Flows tile on the Assets page includes it."},
+{id:"f4",p:"flows",s:"kpi",l:"Organic Gro…",n:"Organic Growth Rate",w:"How fast clients grow assets, without help from markets.",c:"Net Flows ÷ Beginning AUM, scaled to a full year (× 12 for a one-month range, × 4 for a quarter).",e:"$312.4M ÷ $47.17B × 12 = 7.95%",x:"Always annualized. A one-month view is not one month of growth."},
+{id:"f5",p:"flows",s:"kpi",l:"Outflow Rate",n:"Outflow Rate",w:"How fast assets are leaving.",c:"Gross Outflows ÷ Beginning AUM, scaled to a full year (× 12 for a one-month range).",e:"$1,173.8M ÷ $47.17B × 12 = 29.86%"},
+{id:"f6",p:"flows",s:"kpi",l:"Contributing…",n:"Contributing Clients",w:"Clients who added money.",c:"Distinct clients with an inflow over $0 between the start and end dates."},
+{id:"f7",p:"flows",s:"kpi",l:"Avg Inflow…",n:"Avg Inflow per Client",w:"Money added per contributing client.",c:"Gross Inflows ÷ Contributing Clients.",e:"$1,486.2M ÷ 61,480 = $24,174"},
+{id:"f8",p:"flows",s:"chart",l:"Flows",n:"Flows (daily)",w:"Money in vs out per day.",c:"Daily inflows and outflows by attribute.",x:"The dropdown switches between Net, Inflows and Outflows."},
+{id:"f9",p:"flows",s:"chart",l:"Flows by Prod…",n:"Flows by Product",w:"Which products gain or lose money.",c:"Net flows by product and share class."},
+{id:"f10",p:"flows",s:"chart",l:"Top Movers",n:"Top Movers",w:"The largest individual flows.",c:"The 50 largest inflows and outflows between the start and end dates.",x:"One institutional transfer can swing a whole day. Check here before explaining a spike."},
+{id:"f11",p:"flows",s:"fiscal",l:"YTD Cumulative Net Flows",n:"YTD Cumulative Net Flows",w:"Net flows to date vs prior years.",c:"Running total of net flows from Apr 1 through each fiscal month end, one line per fiscal year."},
+{id:"f12",p:"flows",s:"fiscal",l:"Monthly Flows",n:"Monthly Flows",w:"Monthly inflows and outflows, year over year.",c:"Gross flows by fiscal month (April = month 1), one line per fiscal year."},
+// ACQUISITION
+{id:"n1",p:"acquisition",s:"kpi",l:"New Accounts",n:"New Accounts",w:"Accounts opened.",c:"Accounts opened from the start date through the end date, both days included."},
+{id:"n2",p:"acquisition",s:"kpi",l:"Closed",n:"Closed",w:"Accounts closed.",c:"Accounts closed from the start date through the end date, both days included.",x:"Includes accounts opened before the start date, e.g., an account opened in 2019 and closed Mar 12, 2026."},
+{id:"n3",p:"acquisition",s:"kpi",l:"Funded",n:"Funded",w:"New accounts that received money.",c:"New accounts with a transfer within 30 days of opening (an account opened Mar 31, 2026 has until Apr 30, 2026).",x:"Counts a transfer as soon as it’s initiated, even if it hasn’t settled."},
+{id:"n4",p:"acquisition",s:"kpi",l:"Funding Rate",n:"Funding Rate",w:"Share of new accounts that got money.",c:"Funded ÷ New Accounts.",e:"6,141 ÷ 8,412 = 73.0%"},
+{id:"n5",p:"acquisition",s:"kpi",l:"Days to Fund",n:"Days to Fund",w:"How long new clients take to move money.",c:"Median days from opening to first transfer, for accounts opened in the date range that have funded.",x:"Leaves out accounts that never funded, so it looks faster than the full picture."},
+{id:"n6",p:"acquisition",s:"kpi",l:"Assets from…",n:"Assets from New Clients",w:"Money new clients have brought in since opening.",c:"All net flows from opening day through today (e.g., Oct 21, 2026), for accounts opened in the date range.",x:"Not capped at the end date, so older cohorts always look bigger. Don’t compare cohorts of different ages."},
+{id:"n7",p:"acquisition",s:"kpi",l:"Avg New Cli…",n:"Avg New Client Assets",w:"Money brought in per funded new client.",c:"Assets from New Clients ÷ Funded.",e:"$612.8M ÷ 6,141 = $99,788",x:"Inherits the uncapped window from Assets from New Clients."},
+{id:"n8",p:"acquisition",s:"chart",l:"Account Openings",n:"Account Openings",w:"Openings per day.",c:"Daily new accounts by attribute."},
+{id:"n9",p:"acquisition",s:"chart",l:"Openings by Chan…",n:"Openings by Channel",w:"Where new clients come from.",c:"New accounts by channel: advisor, digital or workplace."},
+{id:"n10",p:"acquisition",s:"chart",l:"Funding Rate",n:"Funding Rate (chart)",w:"% of openings funded within 30 days.",c:"Daily funded ÷ daily openings."},
+{id:"n11",p:"acquisition",s:"fiscal",l:"YTD Cumulative Openings",n:"YTD Cumulative Openings",w:"Openings to date vs prior years.",c:"Running total of new accounts from Apr 1 through each fiscal month end, one line per fiscal year."},
+{id:"n12",p:"acquisition",s:"fiscal",l:"Monthly Openings",n:"Monthly Openings",w:"Monthly openings, year over year.",c:"New accounts by fiscal month (April = month 1), one line per fiscal year."},
+// ENGAGEMENT
+{id:"g1",p:"engagement",s:"kpi",l:"Active Clients",n:"Active Clients",w:"Clients with an open, funded account.",c:"Households with at least one open account above $0 at the close of the end date (e.g., Mar 31, 2026).",x:ACTIVE_NOTE},
+{id:"g2",p:"engagement",s:"kpi",l:"Digitally En…",n:"Digitally Engaged",w:"Clients who logged in.",c:"Distinct clients with a web or app session between the start and end dates.",x:"Counts app sessions that refresh in the background, so it reads high."},
+{id:"g3",p:"engagement",s:"kpi",l:"Engaged Rate",n:"Engaged Rate",w:"Share of clients who logged in.",c:"Digitally Engaged ÷ Active Clients.",e:"71,862 ÷ 184,260 = 39.0%",x:"Inherits both catches: background sessions on top, today’s status on the bottom."},
+{id:"g4",p:"engagement",s:"kpi",l:"Advisor Meet…",n:"Advisor Meetings",w:"Client conversations with an advisor.",c:"Meetings logged in the CRM between the start and end dates.",x:"Counts scheduled meetings, including no-shows."},
+{id:"g5",p:"engagement",s:"kpi",l:"Multi-Produ…",n:"Multi-Product Rate",w:"Share of clients with 2+ products.",c:"Clients holding 2+ product types ÷ Active Clients.",e:"58,960 ÷ 184,260 = 32.0%"},
+{id:"g6",p:"engagement",s:"kpi",l:"Retention",n:"12-Month Retention",w:"Share of clients still with the firm a year later.",c:"Households active one year before the end date (e.g., Mar 31, 2025) that are still active on the end date (Mar 31, 2026).",x:"Measured by household. A household that closes one of two accounts still counts as retained."},
+{id:"g7",p:"engagement",s:"kpi",l:"At-Risk Cli…",n:"At-Risk Clients",w:"Clients showing signs of leaving.",c:"Active clients with no login in the 90 days up to the end date (e.g., Jan 1 – Mar 31, 2026) and a net outflow in the date range."},
+{id:"g8",p:"engagement",s:"chart",l:"Sessions",n:"Sessions (daily)",w:"Logins per day.",c:"Daily sessions by attribute."},
+{id:"g9",p:"engagement",s:"chart",l:"Engagement by Seg…",n:"Engagement by Segment",w:"Which client groups log in.",c:"Engaged Rate by client segment."},
+{id:"g10",p:"engagement",s:"chart",l:"Meetings by Chan…",n:"Meetings by Channel",w:"How clients meet their advisors.",c:"Advisor meetings by channel: in person, video or phone."},
+{id:"g11",p:"engagement",s:"fiscal",l:"Retention by Year",n:"Retention by Year",w:"Retention, year over year.",c:"12-month retention measured at each fiscal month end (e.g., Apr 30, 2025), one line per fiscal year."},
+{id:"g12",p:"engagement",s:"fiscal",l:"Monthly Active Clients",n:"Monthly Active Clients",w:"Active clients each month, year over year.",c:"Active clients at the close of each fiscal month’s last day, one line per fiscal year."}
+];
+const VAL = {
+  as1:"$48.62B",as2:"$47.17B",as3:"$348.9M",as4:"$1.10B",as5:"$41.87B",as6:"0.52%",as7:"$1,181",as8:"$263.9K",
+  f1:"$1.49B",f2:"$1.17B",f3:"$312.4M",f4:"7.95%",f5:"29.9%",f6:"61,480",f7:"$24.2K",
+  n1:"8,412",n2:"1,936",n3:"6,141",n4:"73.0%",n5:"6 days",n6:"$612.8M",n7:"$99.8K",
+  g1:"184,260",g2:"71,862",g3:"39.0%",g4:"12,408",g5:"32.0%",g6:"94.1%",g7:"3,215"
+};
+const LINES = ["0,15 15,12 30,13 45,8 60,10 75,5 100,6","0,8 15,10 30,7 45,12 60,9 75,11 100,6","0,16 20,14 40,12 60,9 80,7 100,3","0,10 15,6 30,11 45,9 60,13 75,8 100,10"];
+const BARS = [[9,14,7,17,11,15],[16,12,14,8,10,6],[6,10,13,9,16,12]];
+const SEEN = {}; let hinted = false;
+const BY = Object.fromEntries(M.map(m=>[m.id,m]));
+const SKETCH = {
+  assets:{kpi:["as1","as2","as3","as4","as5","as6","as7","as8"],charts:[["as9","as10"],["as11","as12"]],trends:["as13","as14","as15"]},
+  flows:{kpi:["f1","f2","f3","f4","f5","f6","f7"],charts:[["f8"],["f9","f10"]],trends:["f11","f12"]},
+  acquisition:{kpi:["n1","n2","n3","n4","n5","n6","n7"],charts:[["n8","n9"],["n10"]],trends:["n11","n12"]},
+  engagement:{kpi:["g1","g2","g3","g4","g5","g6","g7"],charts:[["g8","g9"],["g10"]],trends:["g11","g12"]}
+};
+const TREES = {};
+const WATCH = [
+  {t:"Two different “Net Flows”",d:"Assets includes reinvested income. Flows doesn’t.",ids:["as3","f3"]},
+  {t:"AUM isn’t fee-earning AUM",d:"Use Fee-Earning AUM for revenue questions.",ids:["as5"]},
+  {t:"Growth rates are annualized",d:"A one-month view shows a yearly pace, not that month’s growth.",ids:["f4","f5"]},
+  {t:"Cohort assets never stop growing",d:"Older cohorts always look bigger.",ids:["n6"]}
+];
+const QUESTIONS = [
+  ["How much are we managing right now?",["as1","as5","as13"]],
+  ["Is money coming in faster than it’s leaving?",["f3","f1","f2","f8","f12"]],
+  ["Is growth coming from clients or the market?",["as4","as3","f4"]],
+  ["Where is money moving, by product?",["f9","f10","as10"]],
+  ["Are we pricing well?",["as6","as11","as7","as12"]],
+  ["Are new clients funding their accounts?",["n4","n3","n5","n10","n6"]],
+  ["Where do new clients come from?",["n1","n9","n8","n12"]],
+  ["Are clients engaged?",["g3","g2","g4","g9"]],
+  ["Are we keeping clients?",["g6","g7","n2","g11"]],
+  ["Do multi-product clients behave differently?",["g5","as15"]]
+];
+
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[ch]));
+const label = m => m.n.replace(/ \([^)]*\)$/,"");
+const pageTitle = k => PAGES.find(p=>p.k===k).t;
+const pinOf = id => { const m=BY[id]; return M.filter(x=>x.p===m.p).findIndex(x=>x.id===id)+1; };
+const sign = v => v.startsWith("−") ? "down" : "up";
+
+function row(m, withPage){
+  const shows = "";
+  const page = withPage ? `<span class="chip">${pageTitle(m.p)} page</span>` : "";
+  return `<article class="row" id="m-${m.id}" data-id="${m.id}">
+    <span class="pin" aria-hidden="true">${pinOf(m.id)}</span>
+    <div><h4>${esc(m.n)}</h4>${(shows||page)?`<span class="as">${page}${shows}</span>`:""}</div>
+    <p class="what">${esc(m.w)}</p>
+    <p class="calc">${esc(m.c)}</p>
+    ${m.e?`<p class="ex">Example, Mar 1–31, 2026: ${esc(m.e)}</p>`:""}
+    ${m.x?`<p class="warn"><b>Watch out.</b> ${esc(m.x)}</p>`:""}
+  </article>`;
+}
+const seenSet = k => SEEN[k] || (SEEN[k] = new Set());
+function spark(id){
+  const m=BY[id], i=pinOf(id);
+  if(/Mix|by |Movers/.test(m.n)){
+    const b=BARS[i%BARS.length], w=100/b.length;
+    return `<svg viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">${b.map((h,j)=>`<rect x="${j*w+2}" y="${20-h}" width="${w-4}" height="${h}" rx="1" fill="var(--accent)" opacity=".55"/>`).join("")}</svg>`;
+  }
+  return `<svg viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><polyline points="${LINES[i%LINES.length]}" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function tile(id, cls){
+  const m=BY[id], seen=seenSet(m.p).has(id)?" seen":"";
+  const pin=`<span class="pin">${pinOf(id)}</span>`, lbl=`<span class="lbl">${esc(label(m))}</span>`;
+  const inner = cls==="sk-k" ? `<span class="top">${pin}${lbl}</span><span class="val">${esc(VAL[id]||"")}</span>`
+    : cls==="sk-c" ? `<span class="top">${pin}${lbl}</span>${spark(id)}` : pin+lbl;
+  return `<button class="sk-t ${cls||""}${seen}" data-id="${id}" title="${esc(m.n)}: ${esc(m.w)}" aria-label="${esc(m.n)}, item ${pinOf(id)}">${inner}</button>`;
+}
+function exploreHTML(k){
+  const tot=M.filter(m=>m.p===k).length, n=seenSet(k).size;
+  return `<div class="explore${n===tot?" done":""}" id="explore"><span>${n===tot?`All <b>${tot}</b> metrics explored ✓`:`Explored <b>${n} of ${tot}</b> metrics`}</span><span class="bar"><i style="width:${n/tot*100}%"></i></span></div>`;
+}
+function markSeen(id){
+  const m=BY[id], s=seenSet(m.p);
+  if(!hinted){hinted=true;document.querySelectorAll(".sk-t.pulse").forEach(x=>x.classList.remove("pulse"));}
+  if(s.has(id)) return;
+  s.add(id);
+  document.querySelectorAll(`.sk-t[data-id="${id}"]`).forEach(x=>x.classList.add("seen"));
+  const e=document.getElementById("explore"); if(e&&state.page===m.p) e.outerHTML=exploreHTML(m.p);
+}
+function sketchRow(r){
+  return `<div class="sk-row">${r.map(x => typeof x==="string" ? tile(x,"sk-c") : `<div class="sk-tiles">${x.t.map(i=>tile(i)).join("")}</div>`).join("")}</div>`;
+}
+function tree(k){
+  const t=TREES[k]; if(!t) return "";
+  const term=(x,head)=>`<span class="term${head?" head":""}">${esc(x[0])}<b class="${sign(x[1])}">${x[1]}</b></span>`;
+  return `<div class="tree"><h4>How the five tiles fit together</h4>
+    <div class="eq">${term(t.h,1)}<span class="op">=</span>${term(t.a)}<span class="op">×</span>${term(t.b)}</div>
+    <div class="eq">${term(t.b,1)}<span class="op">=</span>${term(t.c)}<span class="op">×</span>${term(t.d)}</div>
+    <p>${esc(t.read)}</p>
+    <p>The small “% of …” text under each tile is that driver’s share of the change above it. The two shares add to 100%, or −100% when the parent fell. A share over 100% means that driver more than explains the change and the other driver pulled the opposite way.</p>
+  </div>`;
+}
+function watchBlock(){
+  return `<details class="watch" open><summary>Before you quote a number <span class="hint">${WATCH.length} common catches</span></summary><ul>${
+    WATCH.map(w=>`<li><b>${esc(w.t)}</b>${esc(w.d)} ${w.ids.map(id=>`<a href="#${BY[id].p}" data-go="${id}">${esc(BY[id].n)}</a>`).join(", ")}</li>`).join("")}</ul></details>`;
+}
+function renderPage(k){
+  const p=PAGES.find(x=>x.k===k), sk=SKETCH[k];
+  const groups = Object.keys(SECS).map(s=>{
+    const ms=M.filter(m=>m.p===k&&m.s===s); if(!ms.length) return "";
+    return `<section class="grp"><h3>${SECS[s][0]}</h3><p class="sub">${SECS[s][1]}</p>${s==="ytd"?tree(k):""}
+      <div class="cols" aria-hidden="true"><span></span><span>Metric</span><span>In plain English</span><span class="f">The formula</span></div>
+      ${ms.map(m=>row(m)).join("")}</section>`;
+  }).join("");
+  document.getElementById("v-pages").innerHTML = watchBlock() + `
+    <div class="pagehead"><h2>${p.t}</h2><p>${esc(p.q)}${p.src?` ${esc(p.src)}`:""}</p></div>
+    <div class="layout">
+      <div class="sketch-col">
+        <div class="legend-tag"><span class="dot"></span>Interactive legend <span class="h">· hover any tile</span></div>
+        <div class="sketch" aria-label="${p.t} page layout">
+          <div class="sk-app"><span class="sk-dots"><i></i><i></i><i></i></span><span class="sk-title">Client Insights <span>· ${p.t}</span></span><span class="sk-pill">Mar 1–31, 2026</span></div>
+          <div class="sk-filters"><span>Channel: All</span><span>Segment: All</span></div>
+          <div class="sk-kpis">${sk.kpi.map(i=>tile(i,"sk-k")).join("")}</div>
+          <div class="sk-split">
+            <div class="sk-main"><span class="sk-cap">Date-range charts</span>${sk.charts.map(sketchRow).join("")}</div>
+            <div class="sk-trends"><span class="sk-cap">Year over year</span>${sk.trends.map(x=>typeof x==="string"?tile(x,"sk-c"):`<div class="sk-tiles">${x.t.map(i=>tile(i)).join("")}</div>`).join("")}</div>
+          </div>
+        </div>
+        ${exploreHTML(k)}
+        <p class="cap">The page in miniature. Hover a tile for a quick definition, or select it to jump to the full one.</p>
+      </div>
+      <div>${groups}</div>
+    </div>`;
+  if(!hinted){const f=document.querySelector(".sk-kpis .sk-t"); if(f) f.classList.add("pulse");}
+}
+function renderQuestions(){
+  document.getElementById("v-questions").innerHTML = `<p class="intro">Start from what you’re trying to answer. Each metric links to its full definition. <span class="flag" style="color:var(--warn)">⚠</span> marks one with a catch.</p>
+  <div class="qgrid">${QUESTIONS.map(([q,ids])=>`<div class="q"><h3>${esc(q)}</h3><ul>${ids.map(id=>{const m=BY[id];
+    return `<li><button data-go="${id}"><span class="n">${esc(m.n)}${m.x?` <span class="flag" aria-label="has a watch-out">⚠</span>`:""}</span><span class="chip">${pageTitle(m.p)}</span><span class="w">${esc(m.w)}</span></button></li>`}).join("")}</ul></div>`).join("")}</div>`;
+}
+function renderCheat(){
+  document.getElementById("v-cheatsheet").innerHTML = watchBlock() + `<div class="cheat">${PAGES.map(p=>`<div><h3>${p.t}</h3><dl>${
+    M.filter(m=>m.p===p.k&&m.s==="kpi").map(m=>`<div><dt>${esc(m.n)}</dt><dd>${esc(m.w)} ${esc(m.c)}${m.x?` <span class="flag" title="${esc(m.x)}">⚠</span>`:""}</dd></div>`).join("")}</dl></div>`).join("")}</div>`;
+}
+
+let state={view:"pages",page:"assets"};
+const tabs=document.getElementById("pagetabs");
+tabs.innerHTML=PAGES.map(p=>`<button data-page="${p.k}" aria-pressed="false">${p.t}</button>`).join("");
+function show(){
+  const q=document.getElementById("q").value.trim();
+  document.querySelectorAll(".views button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===state.view && !q));
+  tabs.hidden = state.view!=="pages" || !!q;
+  tabs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.page===state.page));
+  ["pages","questions","cheatsheet"].forEach(v=>document.getElementById("v-"+v).hidden = (v!==state.view) || !!q);
+  document.getElementById("v-results").hidden=!q;
+  if(state.view==="pages") renderPage(state.page);
+}
+function go(id){
+  const m=BY[id]; document.getElementById("q").value=""; state={view:"pages",page:m.p}; show();
+  const el=document.getElementById("m-"+id); if(!el) return;
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});
+  el.classList.add("flash"); setTimeout(()=>el.classList.remove("flash"),1600);
+}
+document.addEventListener("click",e=>{
+  const v=e.target.closest("[data-view]"); if(v){document.getElementById("q").value="";state.view=v.dataset.view;show();window.scrollTo({top:0});return;}
+  const p=e.target.closest("[data-page]"); if(p){state.page=p.dataset.page;show();return;}
+  const g=e.target.closest("[data-go]"); if(g){e.preventDefault();go(g.dataset.go);return;}
+  const t=e.target.closest(".sk-t"); if(t){markSeen(t.dataset.id);go(t.dataset.id);}
+});
+document.addEventListener("mouseover",e=>{
+  const r=e.target.closest(".row,.sk-t"); document.querySelectorAll(".on").forEach(x=>x.classList.remove("on"));
+  if(r&&r.dataset.id) document.querySelectorAll(`[data-id="${r.dataset.id}"]`).forEach(x=>x.classList.add("on"));
+  if(r&&r.classList.contains("sk-t")) markSeen(r.dataset.id);
+});
+document.addEventListener("focusin",e=>{const t=e.target.closest(".sk-t"); if(t) markSeen(t.dataset.id);});
+document.getElementById("q").addEventListener("input",e=>{
+  const q=e.target.value.trim().toLowerCase();
+  if(q){
+    const hits=M.filter(m=>[m.n,m.l,m.w,m.c,m.x||""].join(" ").toLowerCase().includes(q));
+    document.getElementById("v-results").innerHTML=`<h2>${hits.length} match${hits.length===1?"":"es"} for “${esc(e.target.value.trim())}”</h2>${
+      hits.length?`<div class="cols" aria-hidden="true"><span></span><span>Metric</span><span>In plain English</span><span class="f">The formula</span></div>${hits.map(m=>row(m,true)).join("")}`:`<p class="intro">Nothing matches. Try a shorter word, like “fee” or “active”.</p>`}`;
+  }
+  show();
+});
+function fromHash(){
+  const h=location.hash.slice(1);
+  if(PAGES.some(p=>p.k===h)) state={view:"pages",page:h};
+  else if(h==="questions"||h==="cheatsheet") state.view=h;
+}
+window.addEventListener("hashchange",()=>{fromHash();show();});
+const navEl=document.querySelector("nav.bar");
+function setNavH(){document.documentElement.style.setProperty("--navh",navEl.getBoundingClientRect().height+"px");}
+setNavH(); addEventListener("resize",setNavH);
+fromHash(); renderQuestions(); renderCheat(); show();
+</script>
+</body>
+</html>
