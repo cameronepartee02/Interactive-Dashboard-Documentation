@@ -3,7 +3,6 @@
 **A metric nobody can explain is a metric nobody trusts.**
 This is an interactive data dictionary for a BI dashboard. Hover any tile on a miniature version of the dashboard to see what the metric means, how it's calculated and when to use it.
 
-**[▶ Live demo](https://USERNAME.github.io/REPO-NAME/)**
 
 ![Hovering tiles on the mini dashboard highlights each metric's definition](assets/demo.gif)
 
