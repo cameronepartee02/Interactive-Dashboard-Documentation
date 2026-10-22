@@ -73,4 +73,4 @@ Documentation like this usually takes weeks, if not months, of back-and-forth. W
 
 ---
 
-**Cameron Partee** · Data analyst · **[▶ Live demo]([(https://www.linkedin.com/in/cameronpartee/)])**
+**Cameron Partee** · Data analyst · **[LinkedIn](https://www.linkedin.com/in/cameronpartee/)**
