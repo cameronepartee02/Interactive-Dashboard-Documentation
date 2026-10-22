@@ -65,12 +65,13 @@ Documentation like this usually takes weeks, if not months, of back-and-forth. W
 
 | File | What it is |
 |---|---|
-| `index.html` | The focused metric map: dashboard view with the interactive legend (the live demo) |
-| `full-guide.html` | The complete guide, including "By question," "Cheat sheet" and "Before you quote a number" views |
+| `metric-map-legend.html` | The focused metric map: dashboard pages with the interactive legend, as shown in the demo |
+| `metric-guide-full.html` | The complete guide in the same design: dashboard pages, "By question," "Cheat sheet," "Before you quote a number" and search |
+| `metric-guide-v1-original.html` | The first version, kept to show how the design evolved |
 | `assets/demo.gif`, `assets/demo.mp4` | Screen recording of the interactive legend |
 
 **To run it:** download either HTML file and open it in a browser. No install, no build step.
 
 ---
 
-**YOUR NAME** · Data analyst · [LinkedIn](LINKEDIN-URL)
+**Cameron Partee** · Data analyst 
